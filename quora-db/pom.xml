@@ -91,7 +91,7 @@
         <profile>
             <id>setup</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <build>
                 <plugins>
@@ -110,6 +110,7 @@
                                     <orderFile>none</orderFile>
                                     <srcFiles>
                                         <srcFile>${sql.path}/quora.sql</srcFile>
+                                        <srcFile>${sql.path}/quora_test.sql</srcFile>
                                     </srcFiles>
                                 </configuration>
                             </execution>
