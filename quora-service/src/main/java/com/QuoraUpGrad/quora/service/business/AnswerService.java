@@ -1,6 +1,8 @@
 package com.QuoraUpGrad.quora.service.business;
 
 import com.QuoraUpGrad.quora.service.dao.AnswerDao;
+import com.QuoraUpGrad.quora.service.dao.QuestionDao;
+import com.QuoraUpGrad.quora.service.dao.UserAuthDao;
 import com.QuoraUpGrad.quora.service.entity.AnswerEntity;
 import com.QuoraUpGrad.quora.service.entity.QuestionEntity;
 import com.QuoraUpGrad.quora.service.entity.UserAuthEntity;
@@ -12,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AnswerService {
@@ -21,10 +25,14 @@ public class AnswerService {
     QuestionService questionService;
 
     @Autowired
-    AnswerUserService answerUserService;
+    UserAuthDao userAuthDao;
 
     @Autowired
     AnswerDao answerDao;
+
+
+    @Autowired
+    QuestionDao questionDao;
 
     /**
      * This method is used for creating answer.
@@ -35,14 +43,23 @@ public class AnswerService {
      * @throws @AuthorizationFailedException ATH-001 if the username doesn't exist in DB or ATH-002 if the token is expired.
      */
     @Transactional(propagation = Propagation.REQUIRED)
-    public AnswerEntity createAnswer(AnswerEntity answerEntity, final String authorizationToken) throws AuthorizationFailedException {
-        UserAuthEntity userAuthEntity;
-        userAuthEntity = answerUserService.checkIfTokenIsValid(authorizationToken);
-        if(userAuthEntity == null)
-            throw new AuthorizationFailedException("ATHR-002","User is signed out.Sign in first to post an answer");
+    public AnswerEntity createAnswer(AnswerEntity answerEntity, String questionId, final String accessToken) throws AuthorizationFailedException,InvalidQuestionException {
+        UserAuthEntity userAuthEntity = userAuthDao.getUserAuthByToken(accessToken);
+        if(userAuthEntity == null) {
+            throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
+        } else if (userAuthEntity.getLogoutAt() != null) {
+            throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to post an answer");
+        }
 
+        QuestionEntity question = questionDao.getQuestionById(questionId);
+        if (question == null) {
+            throw new InvalidQuestionException("QUES-001", "The question entered is invalid");
+        }
+
+        answerEntity.setUuid(String.valueOf(UUID.randomUUID()));
+        answerEntity.setQuestion(question);
+        answerEntity.setDate(ZonedDateTime.now());
         answerEntity.setUser(userAuthEntity.getUserEntity());
-
         return answerDao.createAnswer(answerEntity);
     }
 
@@ -71,12 +88,14 @@ public class AnswerService {
      * @throws @AnswerNotFoundException ANS-001 If the Answer ID is not present in the database.
      */
     @Transactional(propagation = Propagation.REQUIRED)
-    public AnswerEntity deleteAnswer(String answerId, final String authorizationToken) throws AuthorizationFailedException, AnswerNotFoundException {
-        UserAuthEntity userAuthEntity;
-        userAuthEntity = answerUserService.checkIfTokenIsValid(authorizationToken);
-        if(userAuthEntity == null)
-            throw new AuthorizationFailedException("ATHR-002","User is signed out.Sign in first to delete an answer");
-
+    public AnswerEntity deleteAnswer(String answerId, final String accessToken) throws AuthorizationFailedException, AnswerNotFoundException {
+        UserAuthEntity userAuthEntity = userAuthDao.getUserAuthByToken(accessToken);
+        if (userAuthEntity == null) {
+            throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
+        } else if (userAuthEntity.getLogoutAt() != null) {
+            throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to "
+                    + "delete an answer");
+        }
         AnswerEntity answerEntity = getAnswerbyId(answerId);
 
         if ((answerEntity.getUser().getId() == userAuthEntity.getUserEntity().getId())
@@ -98,13 +117,18 @@ public class AnswerService {
      * @throws @AuthorizationFailedException ATH-001 if the username doesn't exist in DB or ATH-002 if the token is expired.
      */
     @Transactional(propagation = Propagation.REQUIRED)
-    public AnswerEntity editAnswer(String answerId, final String authorizationToken, String editedAnswer) throws AnswerNotFoundException, AuthorizationFailedException {
-        UserAuthEntity userAuthEntity;
-        userAuthEntity = answerUserService.checkIfTokenIsValid(authorizationToken);
-        if(userAuthEntity == null)
-            throw new AuthorizationFailedException("ATHR-002","User is signed out.Sign in first to edit an answer");
+    public AnswerEntity editAnswer(String answerId, final String accessToken, String editedAnswer) throws AnswerNotFoundException, AuthorizationFailedException {
+        UserAuthEntity userAuthEntity = userAuthDao.getUserAuthByToken(accessToken);
+        if(userAuthEntity == null){
+            throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
+        } else if (userAuthEntity.getLogoutAt() != null) {
+            throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to edit an answer");
+        }
 
         AnswerEntity answerEntity = getAnswerbyId(answerId);
+        if (answerEntity == null) {
+            throw new AnswerNotFoundException("ANS-001", "Entered answer uuid does not exist");
+        }
         if ((answerEntity.getUser().getId() == userAuthEntity.getUserEntity().getId())) {
             answerEntity.setAnswer(editedAnswer);
             return answerDao.editAnswer(answerEntity);
@@ -122,13 +146,14 @@ public class AnswerService {
      * @throws @InvalidQuestionException QUES-001 If the Question ID is not present in the database.
      * @throws @AuthorizationFailedException ATH-001 if the username doesn't exist in DB or ATH-002 if the token is expired.
      */
-    public List<AnswerEntity> getAnswersbyQuestionID(String questionId, final String authorizationToken) throws AuthorizationFailedException, InvalidQuestionException {
-        UserAuthEntity userAuthEntity;
-        userAuthEntity = answerUserService.checkIfTokenIsValid(authorizationToken);
-        if(userAuthEntity == null)
-            throw new AuthorizationFailedException("ATHR-002","User is signed out.Sign in first to get the answers");
-
-        QuestionEntity questionEntity = questionService.getQuestionById(questionId);
+    public List<AnswerEntity> getAnswersbyQuestionID(String questionId, final String accessToken) throws AuthorizationFailedException, InvalidQuestionException {
+        UserAuthEntity userAuthEntity = userAuthDao.getUserAuthByToken(accessToken);
+        if(userAuthEntity == null) {
+            throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
+        } else if (userAuthEntity.getLogoutAt() != null) {
+            throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to get the answers");
+         }
+                QuestionEntity questionEntity = questionService.getQuestionById(questionId);
         List<AnswerEntity> allAnswers = answerDao.getAnswersbyQUestionId(questionEntity);
 
         return allAnswers;

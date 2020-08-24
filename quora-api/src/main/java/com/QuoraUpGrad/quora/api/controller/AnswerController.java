@@ -52,7 +52,7 @@ public class AnswerController {
         answerEntity.setDate(ZonedDateTime.now());
         answerEntity.setAnswer(answerRequest.getAnswer());
 
-        final AnswerEntity createdAnswerEntity = answerService.createAnswer(answerEntity, authorization);
+        final AnswerEntity createdAnswerEntity = answerService.createAnswer(answerEntity, questionId, authorization);
         AnswerResponse answerResponse = new AnswerResponse().id(createdAnswerEntity.getUuid().toString()).status("ANSWER CREATED");
 
         return new ResponseEntity<AnswerResponse>(answerResponse, HttpStatus.CREATED);

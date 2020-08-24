@@ -18,6 +18,9 @@ public class CommonUserService {
     @Autowired
     UserDao userDao;
 
+    @Autowired
+    AnswerUserService answerUserService;
+
     /**
      * This method checks if the access token exist in the DB and it is not logged out.
      *
@@ -43,7 +46,14 @@ public class CommonUserService {
      * @return
      * @throws UserNotFoundException USR-001 if the user with given id doesn't exist in DB.
      */
-    public UserEntity getUserById(final String userId) throws UserNotFoundException {
+    public UserEntity getUserById(final String userId,String accessToken) throws AuthorizationFailedException,UserNotFoundException {
+        UserAuthEntity userAuthEntity = userAuthDao.getUserAuthByToken(accessToken);
+        if (userAuthEntity == null) {
+            throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
+        } else if (userAuthEntity.getLogoutAt() != null) {
+            throw new AuthorizationFailedException("ATHR-002",
+                    "User is signed out.Sign in first to get user details");
+        }
         UserEntity userEntity = userDao.getUserById(userId);
         if (userEntity == null) {
             throw new UserNotFoundException("USR-001", "User with entered uuid does not exist");

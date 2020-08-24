@@ -35,6 +35,7 @@ public class UserAuthenticationService {
      */
     @Transactional(propagation = Propagation.REQUIRED)
     public UserEntity signup(UserEntity userEntity) throws SignUpRestrictedException {
+        //Checking the username
         if (isUserNameInUse(userEntity.getUserName())) {
             throw new SignUpRestrictedException("SGR-001", "Try any other Username, this Username has already been taken");
         }
@@ -44,6 +45,11 @@ public class UserAuthenticationService {
         }
         // Assign a UUID to the user that is being created.
         userEntity.setUuid(UUID.randomUUID().toString());
+
+        //default Password
+        if (userEntity.getPassword() == null) {
+            userEntity.setPassword("quora@0987");
+        }
         // Assign encrypted password and salt to the user that is being created.
         String[] encryptedText = passwordCryptographyProvider.encrypt(userEntity.getPassword());
         userEntity.setSalt(encryptedText[0]);
@@ -71,13 +77,13 @@ public class UserAuthenticationService {
             throw new AuthenticationFailedException("ATH-002", "Password failed");
         }
 
-        //JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(encryptedPassword);
+        JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(encryptedPassword);
         UserAuthEntity userAuthEntity = new UserAuthEntity();
         userAuthEntity.setUuid(UUID.randomUUID().toString());
         userAuthEntity.setUserEntity(userEntity);
         final ZonedDateTime now = ZonedDateTime.now();
         final ZonedDateTime expiresAt = now.plusHours(8);
-        userAuthEntity.setAccessToken("Test");
+        userAuthEntity.setAccessToken(jwtTokenProvider.generateToken(userEntity.getUuid(), now, expiresAt));
         userAuthEntity.setLoginAt(now);
         userAuthEntity.setExpiresAt(expiresAt);
         userAuthDao.createAuthToken(userAuthEntity);

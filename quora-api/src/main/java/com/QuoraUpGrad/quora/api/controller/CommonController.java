@@ -33,7 +33,7 @@ public class CommonController {
     public ResponseEntity<UserDetailsResponse> fetchUserDetails(@PathVariable(value = "userId") final String userId, @RequestHeader("authorization") final String accessToken)
             throws UserNotFoundException, AuthorizationFailedException {
         commonUserService.checkIfTokenIsValid(accessToken);
-        UserEntity userEntity = commonUserService.getUserById(userId);
+        UserEntity userEntity = commonUserService.getUserById(userId,accessToken);
         UserDetailsResponse userResponse = new UserDetailsResponse()
                 .firstName(userEntity.getFirstName()).lastName(userEntity.getLastName()).userName(userEntity.getUserName())
                 .emailAddress(userEntity.getEmail()).country(userEntity.getCountry()).aboutMe(userEntity.getAboutMe())

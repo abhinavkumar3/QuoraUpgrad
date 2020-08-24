@@ -50,7 +50,7 @@ public class QuestionController {
         questionEntity.setDate(now);
         questionEntity.setUserEntity(userAuthEntity.getUserEntity());
         //call create method on service class
-        final QuestionEntity createdQuestionEntity = questionService.createQuestion(questionEntity);
+        final QuestionEntity createdQuestionEntity = questionService.createQuestion(authorization,questionEntity);
         QuestionResponse questionResponse = new QuestionResponse().id(createdQuestionEntity.getUuid()).status("QUESTION CREATED");
         return new ResponseEntity<QuestionResponse>(questionResponse, HttpStatus.CREATED);
 
@@ -66,7 +66,7 @@ public class QuestionController {
     @RequestMapping(method = RequestMethod.GET, path = "/question/all", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<List<QuestionDetailsResponse>> getAllQuestions(@RequestHeader("authorization") final String authorization) throws AuthorizationFailedException {
         UserAuthEntity userAuthEntity = questionUserService.checkIfTokenIsValid(authorization, "all");
-        Iterator<QuestionEntity> itrQuestions = questionService.getAllQuestions().iterator();
+        Iterator<QuestionEntity> itrQuestions = questionService.getAllQuestions(authorization).iterator();
         List<QuestionDetailsResponse> questionResponseList = new ArrayList<QuestionDetailsResponse>();
         while (itrQuestions.hasNext()) {
             QuestionEntity questionEntity = itrQuestions.next();
@@ -92,7 +92,7 @@ public class QuestionController {
         QuestionEntity questionEntity = questionService.getQuestionById(questionId);
 
         //checks if the user is authorized to delete a question before allowing him to do so
-        questionService.deleteQuestion(signedInUser, questionEntity);
+        questionService.deleteQuestion(authorization,signedInUser, questionEntity);
         QuestionDeleteResponse questionDeleteResponse = new QuestionDeleteResponse().id(questionEntity.getUuid()).status("QUESTION DELETED");
         return new ResponseEntity<QuestionDeleteResponse>(questionDeleteResponse, HttpStatus.OK);
     }
@@ -117,7 +117,7 @@ public class QuestionController {
         UserEntity signedInUser = questionUserService.checkIfTokenIsValid(authorization, "edit").getUserEntity();
         QuestionEntity questionEntity;
         questionEntity = questionService.getQuestionById(questionId);
-        questionService.editQuestionContent(signedInUser, questionEntity, questionEditRequest.getContent());
+        questionService.editQuestionContent(authorization,signedInUser, questionEntity, questionEditRequest.getContent());
         QuestionEditResponse questionEditResponse = new QuestionEditResponse().id(questionEntity.getUuid()).status("QUESTION EDITED");
         return new ResponseEntity<QuestionEditResponse>(questionEditResponse, HttpStatus.OK);
     }
@@ -134,7 +134,7 @@ public class QuestionController {
     public ResponseEntity<List<QuestionDetailsResponse>> getQuestionsByUser(@PathVariable("userId") final String userId, @RequestHeader("authorization") final String authorization) throws AuthorizationFailedException, UserNotFoundException {
         String[] bearerToken = authorization.split("Bearer ");
         UserEntity userEntity = questionUserService.checkIfTokenIsValid(authorization, "allbyuser").getUserEntity();
-        Iterator<QuestionEntity> itrQuestions = questionService.getQuestionsByUser(userId).iterator();
+        Iterator<QuestionEntity> itrQuestions = questionService.getQuestionsByUser(authorization,userId).iterator();
         List<QuestionDetailsResponse> questionResponseList = new ArrayList<QuestionDetailsResponse>();
         while (itrQuestions.hasNext()) {
             QuestionEntity questionEntity = itrQuestions.next();
