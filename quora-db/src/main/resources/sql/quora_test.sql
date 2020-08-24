@@ -14,15 +14,15 @@ VALUES (1029,'database_uuid4','database_firstname4','database_lastname4','databa
 
 
 --Insert values in USER_AUTH table
-insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at, logout_at) values(1024 , 'database_uuid' , 1025 , 'database_accesstoken' , '2020-08-24 21:07:02.07' , '2020-08-24 13:07:02.07' , null);
-insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at , logout_at) values(1025 , 'database_uuid1' , 1026 , 'database_accesstoken1' , '2020-08-24 21:07:02.07' , '2020-08-24 13:07:02.07' , null );
-insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at , logout_at) values(1026 , 'database_uuid2' , 1027 , 'database_accesstoken2' , '2020-08-24 21:07:02.07' , '2020-08-24 13:07:02.07' , null );
-insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at , logout_at) values(1027 , 'database_uuid3' , 1028 , 'database_accesstoken3' , '2020-08-24 21:07:02.07' , '2020-08-24 13:07:02.07' , '2020-08-24 15:07:02.07' );
+insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at, logout_at) values(1024 , 'database_uuid' , 1025 , 'database_accesstoken' , '2018-09-17 21:07:02.07' , '2018-09-17 13:07:02.07' , null);
+insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at , logout_at) values(1025 , 'database_uuid1' , 1026 , 'database_accesstoken1' , '2018-09-17 21:07:02.07' , '2018-09-17 13:07:02.07' , null );
+insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at , logout_at) values(1026 , 'database_uuid2' , 1027 , 'database_accesstoken2' , '2018-09-17 21:07:02.07' , '2018-09-17 13:07:02.07' , null );
+insert into user_auth (id , uuid , user_id , access_token , expires_at , login_at , logout_at) values(1027 , 'database_uuid3' , 1028 , 'database_accesstoken3' , '2018-09-17 21:07:02.07' , '2018-09-17 13:07:02.07' , '2018-09-17 15:07:02.07' );
 
 
 --Insert values in QUESTION table
-insert into question (id,uuid,content,date,user_id) values(1024,'database_question_uuid','database_question_content','2020-08-24 19:41:19.593',1026);
+insert into question (id,uuid,content,date,user_id) values(1024,'database_question_uuid','database_question_content','2018-09-17 19:41:19.593',1026);
 
 
 --Insert values in ANSWER table
-insert into answer(id,uuid,ans,date,user_id,question_id) values (1024,'database_answer_uuid','my_answer','2020-08-24 19:41:19.593',1026,1024);
+insert into answer(id,uuid,ans,date,user_id,question_id) values (1024,'database_answer_uuid','my_answer','2018-09-17 19:41:19.593',1026,1024);
